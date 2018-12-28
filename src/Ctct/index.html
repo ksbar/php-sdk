@@ -1,0 +1,1010 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
+    <link rel="stylesheet" href="//code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css">
+    <!--<link rel="stylesheet" href="/resources/demos/style.css">-->
+    <link rel="stylesheet" href="https://site-ksbar.c9users.io/scss/includes/_spacing.css">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.2.4/jquery.min.js"></script>
+    <script src="//netdna.bootstrapcdn.com/bootstrap/3.1.1/js/bootstrap.min.js"></script>
+    <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.js"></script>
+    <style>
+        .u-borderDashed.u-borderBottom {
+            border-bottom-style: dashed;
+        }
+
+        .u-marginBottomHalf,
+        .u-marginEndsHalf {
+            margin-bottom: .75rem!important;
+        }
+
+        .u-borderBottom,
+        .u-borderEnds {
+            border-bottom: 1px solid #d7dadd;
+        }
+
+        .checkbox input[type=checkbox] {
+            position: relative;
+            min-width: 20px;
+            min-height: 20px;
+            line-height: 1.5;
+            margin-left: 0px;
+        }
+
+        .checked {
+            background-color: #F0FBFE!important;
+        }
+
+        .ui-progressbar {
+            position: relative;
+        }
+
+        .progress-label {
+            position: absolute;
+            left: 50%;
+            top: 4px;
+            font-weight: bold;
+            text-shadow: 1px 1px 0 #fff;
+        }
+
+        .ui-widget-header {
+            background: #A2AB58;
+        }
+
+        .ui-progressbar .ui-progressbar-value {
+            margin: 0px;
+        }
+
+        [id^="successprogressbar"]>.ui-widget-header {
+            background: #E44424;
+        }
+
+        [id^="opensprogressbar"]>.ui-widget-header {
+            background: #67BCDB;
+        }
+
+        [id^="clicksprogressbar"]>.ui-widget-header {
+            background: #A2AB58;
+        }
+
+        .totals {
+            /* border-bottom: 1px solid lightgrey; */
+            border-top: 2px solid lightgrey;
+        }
+
+        .row-border,
+        .row-bottom {
+            border-bottom: 1px solid lightgrey;
+        }
+
+        .capitalize {
+            text-transform: capitalize;
+        }
+
+        .modal-body {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .footer {
+            padding-top: 40px;
+            padding-bottom: 60px;
+            background-color: #67bcdb;
+            margin-top: 40px;
+        }
+    </style>
+
+</head>
+
+<body>
+    <div class="container">
+        <div class="row">
+
+            <div class="col-xs-12 form-inline">
+                <h2 id="header">Constant Contact Emails</h2>
+            </div>
+            <div class="col-xs-12 col-sm-6">
+                <div class="form-group">
+                    <label>Status:</label>
+                    <select id="status" class="form-control">
+                    <option value="ALL">All</option>
+                    <option value="DRAFT">Draft</option>
+                    <option value="RUNNING">Running</option>
+                    <option value="SENT" selected=selected>Sent</option>
+                    <option value="SCHEDULED">Scheduled</option>
+                </select>
+                </div>
+            </div>
+            <div class="col-xs-12 col-sm-6 well">
+                <label>Search <small>(capitalization matters...)</small>: </label>
+                <input id="search_listing" type="text" class="form-control" /><button id="search-btn" class="btn btn-primary">Search</button><button id="cancel-search" class="btn btn-default">Clear &times;</button>
+            </div>
+
+        </div>
+
+        <div class="row" style="margin-top: 20px; margin-bottom: 40px;">
+            <div class="col-6 col-xs-6"><a href="#" id="compare" class="btn btn-default compare disabled" data-toggle="tooltip" title="Must have greater than 1 and less than 4 checked">Compare Emails <span id="count-checked-checkboxes">(0)</span></a></div>
+            <div class="col-6 col-xs-6">
+                <div class="pull-left" style="display: none;"><strong>Number loaded:</strong> <span id="email-count"></span></div><a href="#" id="next" class="btn btn-info hidden next pull-right">Load More</a></div>
+        </div>
+        <div id="emailLists" class="row"></div>
+
+        <div class="modal fade" id="myModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true" data-email-id="0">
+            <div class="modal-dialog modal-lg">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                        <h4 class="modal-title" id="myModalLabel">Single Campaign</h4>
+                        <!--<a class="btn btn-default" href="#" target="_blank" id="NewWin">View Email</a>-->
+                    </div>
+                    <div class="modal-body">
+                        <!-- Nav tabs -->
+                        <ul class="nav nav-tabs">
+                            <li class="active"><a href="#main" data-toggle="tab">Main</a></li>
+                            <li><a href="#opens" data-toggle="tab">Opens</a></li>
+                            <li><a href="#clicks" data-toggle="tab">Clicks</a></li>
+                            <li><a href="#sends" data-toggle="tab">Sends</a></li>
+                            <li><a href="#bounces" data-toggle="tab">Bounces</a></li>
+                            <li><a href="#unsubscribes" data-toggle="tab">Unsubscribes</a></li>
+                            <li><a href="#forwards" data-toggle="tab">Forwards</a></li>
+                        </ul>
+
+                        <!-- Tab panes -->
+                        <div class="tab-content" id="modalTab">
+                            <div class="tab-pane active" id="main"></div>
+                            <div class="tab-pane" id="opens"><span id="opens_loading" class="loading">Loading...</span></div>
+                            <div class="tab-pane" id="clicks"><span id="clicks_loading" class="loading">Loading...</span></div>
+                            <div class="tab-pane" id="sends"><span id="sends_loading" class="loading">Loading...</span></div>
+                            <div class="tab-pane" id="bounces"><span id="bounces_loading" class="loading">Loading...</span></div>
+                            <div class="tab-pane" id="unsubscribes"><span id="unsubscribes_loading" class="loading">Loading...</span></div>
+                            <div class="tab-pane" id="forwards"><span id="forwards_loading" class="loading">Loading...</span></div>
+
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="modal fade" id="modalCompare" tabindex="-1" role="dialog" aria-labelledby="modalCompareLabel" aria-hidden="true">
+            <div class="modal-dialog modal-lg">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                        <h4 class="modal-title" id="modalCompareLabel">Comparing Emails</h4>
+                        <!--<a class="btn btn-default" href="#" target="_blank" id="NewWin2">View Email</a>-->
+                    </div>
+                    <div class="modal-body" style="min-height: 200px;">
+                        <!-- Nav tabs -->
+                        <ul class="nav nav-tabs" id="modalCompareList">
+                            <li class="active hidden"><a href="#0" data-toggle="tab">First</a></li>
+                            <li class="hidden"><a href="#1" data-toggle="tab">Second</a></li>
+                            <li class="hidden"><a href="#2" data-toggle="tab">Third</a></li>
+                            <li class="hidden"><a href="#3" data-toggle="tab">Fourth</a></li>
+                            <li class="hidden"><a href="#4" data-toggle="tab">Fifth</a></li>
+                        </ul>
+
+                        <!-- Tab panes -->
+                        <div class="tab-content" id="modalCompareTab">
+                            <div class="tab-pane active" id="0"><span id="first_loading" class="loading">Loading...</span></div>
+                            <div class="tab-pane" id="1"><span id="second_loading" class="loading">Loading...</span></div>
+                            <div class="tab-pane" id="2"><span id="third_loading" class="loading">Loading...</span></div>
+                            <div class="tab-pane" id="3"><span id="fourth_loading" class="loading">Loading...</span></div>
+                            <div class="tab-pane" id="4"><span id="fifth_loading" class="loading">Loading...</span></div>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="row" style="margin-top: 20px; margin-bottom: 40px;">
+            <div class="col-12 col-xs-12"><a href="#" id="next2" class="btn btn-info hidden next pull-right">Load More</a></div>
+        </div>
+    </div>
+
+    <footer class="container-fluid footer">
+        <div class="container">
+            <div class="row">
+                <div id="footer">
+                    &copy; Kansas Bar Association &bull; <span id="copyright"></span>
+
+                </div>
+            </div>
+        </div>
+    </footer>
+    <script>
+        /*global $ */
+        let url, getLists, listTracking, data, selected, emailCount, isNext, listNext, matchedRows, hiddenRows, thisSearch, searchMode, dateOptions,
+            itemDetails, getOpens, getClicks, getSends, getBounces, getUnsubscribes, getForwards, checkedCheckboxes, countCheckedCheckboxes, matchedRowsCheck;
+        listTracking = ['clicks', 'opens', 'sends', 'unsubscribes', 'forwards', 'bounces'];
+
+        emailCount = 1;
+        listNext = 0;
+        isNext = false;
+        searchMode = false;
+        url = 'getcc.php';
+        dateOptions = {
+            weekday: 'short',
+            year: '2-digit',
+            month: 'numeric',
+            day: 'numeric',
+            hour: '2-digit',
+            minute: 'numeric'
+            //hour12: false
+        };
+
+        $('#copyright').html(new Date().getFullYear());
+
+        function getEmails(data, option) {
+            console.log('data: ', data);
+            $.ajax({
+                type: 'GET',
+                url: url,
+                data: data,
+                dataType: 'json',
+                success: function (response) {
+                    //setTimeout(function () {
+                    //    console.log(response);
+                    filter(response, option);
+                    //}, 2000); // The millis to wait before executing this block
+                },
+                error: function (jqXHR, textStatus, errorThrown) {
+                    $('#emailLists').html(jqXHR, textStatus, errorThrown);
+                }
+            });
+        }
+
+
+
+        var fetchData = function (data) {
+            // console.log('data: ', data, speed);
+            // var async = undefined !== speed ? true : false;
+            return $.ajax({
+                type: 'GET',
+                url: url,
+                data: data,
+                dataType: 'json'
+            });
+        };
+
+        function mainLoad(data) {
+            $('#email-count').parent().fadeOut();
+            getLists = fetchData(data);
+
+            // function filter(response, option) {
+            //     console.log(option);
+            //     if (option === 'list') {
+            //         listItems(response);
+            //     }
+            //     else if (option === 'back') {
+            //         //$('#emailLists').html('');
+            //         emailCount = 1;
+            //         listItems(response);
+            //     }
+            //     else if (option === 'contacts-lists') {
+            //         //console.log('contacts-lists');
+            //         contactListsAppend(response);
+            //     }
+            //     else if (listTracking.indexOf(option) >= 0) {
+            //         console.log('found in index: ' + option);
+            //         listAppend(response, option);
+            //     }
+            //     else if (option === 'clicks') {
+            //         //console.log(option);
+            //         clicksListAppend(response, option);
+            //     }
+            //     else {
+            //         //$('#emailLists').html('');
+            //         $('#myModal #main').html('');
+            //         itemDetails(response);
+            //     }
+            // }
+            getLists.done(function (data) {
+                mainBody(data);
+            });
+
+            function mainBody(data) {
+                let tbody, th, tr;
+
+                console.log(data);
+                $('#header').html('Constant Contact Emails');
+                if ($.isEmptyObject($('#list-emails'))) {
+                    tbody = $('#list-emails');
+                }
+                else {
+                    tbody = $('<div class="col-xs-12 col-12" id="list-emails"></div>');
+                    $('#emailLists').append(tbody);
+                }
+                var sortAlpha = data['results'].sort(function (a, b) {
+                    a = a.modified_date;
+                    b = b.modified_date;
+                    //return a.modified_date - b.modified_date;
+                    return ((b < a) ? -1 : ((b > a) ? 1 : 0));
+                });
+                console.log('sortAlpha: ', sortAlpha);
+                if (listNext === 0) {
+                    th = '<div class="row row-bottom" style="font-weight: bold; text-align: center;">' +
+                        '<div class="col-xs-2 col-sm-1"><div class="input-group" style="margin-top: 10px;"><label for="select-all" class=""><h3>Select All</h3></label><div class="checkbox"><input type="checkbox" name="select-all" id="select-all"></div></div></div>' +
+                        '<div class="col-xs-5 col-sm-6" style="margin-top: 10px;"><h3>Subject</h3></div>' +
+                        '<div class="col-xs-2"><div class="form-group" style="margin-top: 10px;"><h3>Status</h3></div></div>' +
+                        '<div class="col-xs-3"><div class="form-group" style="margin-top: 10px;"><h3>Update</h3></div></div>' +
+                        '</div>';
+                    $(tbody).append(th).fadeIn(300);
+                }
+
+                /* After sorted above, each row and column is created and then appended  */
+                $.each(sortAlpha, function (k, v) {
+                    console.log(emailCount + k, v);
+                    /* https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Date/toLocaleDateString */
+                    let modifiedDate = prettyDate(v.modified_date);
+                    let modifiedDateSplit = modifiedDate.split(',');
+                    let dayWkNum = new Date(v.modified_date).getDay();
+                    let dayWk;
+                    var days = ['Sun', 'Mon', 'Tues', 'Wed', 'Thurs', 'Fri', 'Sat'];
+                    var months = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+                    //console.log();
+
+                    let date = prettyDate(v.modified_date);
+                    // ' + dayWk + ', ' + modifiedDateSplit[1] + ' at' + modifiedDateSplit[2] + '
+                    dayWk = days[new Date(v.modified_date).getDay()];
+                    var month = months[new Date(v.modified_date).getMonth()];
+                    var statusLookUp = {
+                        'DRAFT': 'bg-info',
+                        'RUNNING': 'bg-alert',
+                        'SENT': 'bg-success',
+                        'SCHEDULED': ''
+                    };
+
+                    tr = '<div class="row row-bottom" id="row_' + (emailCount + k) + '">' +
+                        '<div class="col-xs-2 col-sm-1"><div class="checkbox"><label for="check_' + v.id + '"><input type="checkbox" name="check_' + v.id + '" class="email-check" data-email-check="' + v.id + '"></label></div></div>' +
+                        '<div class="col-xs-5 col-sm-6"><a href="#id=' + v.id + '" data-id="' + v.id + '" class="email-view lead" title="(' + (emailCount + k) + ') ' + v.name + '">' + v.name + '</a></div>' +
+                        '<div class="col-xs-2"><div class="form-group" style="margin-top: 10px; text-align: center;"><span class="' + statusLookUp[v.status] + ' p-2">' + v.status + '</span></div></div>' +
+                        '<div class="col-xs-3"><div class="form-group" style="margin-top: 10px; text-align: center"><span style="padding: 3px;">' + date + '</span></div></div>' +
+                        //'<div class="col-xs-1"><div class="form-group" style="margin-top: 10px;">' + (emailCount + k) + '</div></div>' +
+                        '</div>';
+
+                    $(tbody).append(tr);
+                });
+
+                tr = '';
+
+                /* Update email count to total of results found */
+                emailCount = emailCount + data['results'].length;
+                $('#email-count').text(emailCount - 1).parent().fadeIn();
+
+                if ($.isEmptyObject(data.meta.pagination.next_link)) {
+                    isNext = false;
+                    console.log(isNext);
+                }
+                else {
+                    isNext = true;
+                    console.log(data.meta.pagination.next_link);
+                }
+                if (isNext === true) {
+                    $('.next').removeClass('hidden').removeAttr('data-link');
+                    let next_link = data.meta.pagination.next_link.split('=')[1];
+                    //console.log('Before update: ', next_link);
+                    $('.next').data('link', next_link);
+                    //console.log('After update: ', $('.next').data('link'));
+                }
+                else {
+                    $('.next').addClass('hidden');
+                }
+                /* Meant to prevent adding the header each time. */
+                listNext += 1;
+
+                if (searchMode === true) {
+                    searchRows();
+                }
+            }
+        }
+
+        function getDetails(dataId) {
+            var trackers;
+            trackers = [getOpens, getClicks, getSends, getBounces, getUnsubscribes, getForwards];
+            /*
+            array.reduce(function (p, item) {
+                return p.then(function () {
+                    // you can access item.id and item.title here
+                    return $.ajax({ url: 'url here', ... }).then(function (result) {
+                        // process individual ajax result here
+                    });
+                });
+            }, Promise.resolve()).then(function () {
+                // all requests are done here
+            });
+            */
+            itemDetails = fetchData({
+                method: '/emailmarketing/campaigns',
+                id: dataId
+            });
+
+            itemDetails.then(function (data) {
+                mainDetails(data, 'main', 'myModal');
+            }).then(function () {
+                getOpens = fetchData({
+                    method: '/emailmarketing/campaigns',
+                    id: dataId,
+                    tracking: 'opens'
+                });
+                return getOpens;
+            }).then(function () {
+                //listAppend(getOpens, 'opens');
+                getClicks = fetchData({
+                    method: '/emailmarketing/campaigns',
+                    id: dataId,
+                    tracking: 'clicks'
+                });
+                return getClicks;
+            }).then(function () {
+                //listAppend(getClicks, 'clicks');
+                getSends = fetchData({
+                    method: '/emailmarketing/campaigns',
+                    id: dataId,
+                    tracking: 'sends'
+                });
+                return getSends;
+            }).then(function () {
+                //listAppend(getSends, 'sends');
+                getBounces = fetchData({
+                    method: '/emailmarketing/campaigns',
+                    id: dataId,
+                    tracking: 'bounces'
+                });
+                return getBounces;
+            }).then(function () {
+                //listAppend(getBounces, 'bounces');
+                getUnsubscribes = fetchData({
+                    method: '/emailmarketing/campaigns',
+                    id: dataId,
+                    tracking: 'unsubscribes'
+                });
+                return getUnsubscribes;
+            }).then(function () {
+                //listAppend(getUnsubscribes, 'unsubscribes');
+                getForwards = fetchData({
+                    method: '/emailmarketing/campaigns',
+                    id: dataId,
+                    tracking: 'forwards'
+                });
+                return getForwards;
+            }).done(function () {
+                listAppend(getOpens, 'opens');
+                listAppend(getClicks, 'clicks');
+                listAppend(getSends, 'sends');
+                listAppend(getBounces, 'bounces');
+                listAppend(getUnsubscribes, 'unsubscribes');
+                listAppend(getForwards, 'forwards');
+            });
+        }
+
+        function contactsLists(data, divId, modalId) {
+            let Lists = $('<div class="col-xs-12 col-md-6"><h3>Contact Lists</h3></div>');
+            let contactLists = $('<ul id="contacts-lists-' + divId + '"></ul>');
+            $(Lists).append(contactLists);
+            $.each(data, function (k, v) {
+                console.log(k, v.id);
+
+                //$(contactLists).append('<a href="#" class="contact-list-item" data-id="' + v.id + '">' + v.id + '</a><br>');
+                $(contactLists).append('<li class="contact-list-item" style="display: block;" data-id="' + v.id + '"></li>');
+
+                fetchData({
+                    method: '/lists',
+                    id: v.id
+                }).done(function (response) {
+                    $('[data-id="' + response.id + '"]').html(response.name);
+                });
+            });
+            $('#tracking-stats-' + divId).append(Lists);
+        }
+
+
+        /* General Functions */
+        function mainDetails(data, divId, modalId) {
+            $('#' + divId + '> .loading').remove();
+            $('#' + modalId).removeAttr('data-email-id');
+            if (modalId === 'myModal') {
+                $('#' + modalId).attr('data-email-id', data.id);
+            }
+            let tbody, tr, link_stats, emailSubject, secureLink, details, sends, opens, bounces, clicks, forwards, spam, unsubscribes;
+            console.log(data);
+            tbody = $('<div class="col-xs-12 col-12" style="margin-bottom: 20px;"></div>');
+
+            console.log(data.id);
+
+            data['click_through_details'].sort(function (a, b) {
+                return b.click_count - a.click_count;
+            });
+            //console.log('sortAlpha: ', sortAlpha);
+            var runDate = new Date(data['last_run_date']).toLocaleString();
+
+            details = data['permalink_url'].split('?')[1];
+            emailSubject = data['subject'].replace(/\W/gi, '-'); //data['subject'].replace(/[!•,\s;]/gi, '-');
+            console.log(data['subject']);
+            console.log(emailSubject);
+
+            secureLink = 'https://myemail.constantcontact.com/' + emailSubject + '.html?' + details;
+            console.log(secureLink);
+            //secureLink = 'https://myemail.constantcontact.com/Your-KBA-Weekly---November-20--2018---Renew-or-Register-for-your-KBA-Membership-Today-.html?soid=1123887941892&aid=c-Pxy65kLYU';
+
+            sends = data.tracking_summary.sends;
+            opens = data.tracking_summary.opens;
+            clicks = data.tracking_summary.clicks;
+            bounces = data.tracking_summary.bounces;
+            forwards = data.tracking_summary.forwards;
+            spam = data.tracking_summary.spam_count;
+            unsubscribes = data.tracking_summary.unsubscribes;
+
+            // tr = '<div class="row row-bottom">' +
+            //     '<div class="col-xs-12 col-sm-1"><a href="#" data-dismiss="modal" class="btn btn-default">Back</a></div>' + //onclick="getEmails(data_reset, \'back\')"
+            //     '<div class="col-xs-12 col-sm-9">' +
+            //     '<button class="btn btn-primary openBtn" data-toggle="modal" data-target="#myModal">View Email</button>' +
+            //     //'<div class="col-xs-12 col-sm-2"><div class="form-group" style="margin-top: 10px;"> ' + runDate + '</div>' +
+            //     '</div>';
+            // $(tbody).append(tr);
+
+            //$('#header').html(data.subject + '<br><small><strong>Sent</strong> ' + runDate + '</small>');
+            let emailHeader = $('<div class="row" style="margin-bottom: 10px;" id="email-header-' + divId + '">' +
+                '<h4><strong>Subject:</strong> ' + data.subject + '</h4>' +
+                '<p><strong>Campaign Name:</strong> ' + data.name + '<br><strong>Sent</strong> ' + runDate +
+                '<a class="btn btn-default pull-right" href="' + data.permalink_url + '" target="_blank">View Email</a></p>' +
+                '</div>');
+            let tracking_stats = $('<div class="row" style="margin-bottom: 20px;" id="tracking-stats-' + divId + '"></div>');
+            let totalSuccess = subtract([sends, bounces]);
+            let successPercent = percentage(totalSuccess, sends);
+            let opensPercent = percentage(opens, sends);
+            let clicksPercent = percentage(clicks, opens);
+            let td = '<div class="col-xs-12 col-md-6"><h3>Tracking Stats</h3>' +
+                '<div class="well"><div class="u-borderBottom u-borderDashed u-marginBottomHalf"><strong>Sent:</strong><a href="#sends"><span class="pull-right"><strong>' + numberCommas(sends) + '</strong></a></span></div>' +
+                '<div class="u-borderBottom u-borderDashed u-marginBottomHalf"><strong>Bounces:</strong><span class="pull-right"><a href="#bounces"><strong>' + numberCommas(bounces) + '</strong></a></span></div>' +
+                '<div id="successprogressbar' + divId + '"><div class="progress-label">' + successPercent + '%</div></div>' +
+                '<div class="u-borderBottom u-borderDashed u-marginBottomHalf"><strong>Successful Deliveries:</strong><span class="pull-right"><strong>' + numberCommas(totalSuccess) + ' (' + successPercent + '%)</strong></span></div>' +
+                '</div><div class="well">' +
+                '<div id="opensprogressbar' + divId + '"><div class="progress-label">' + opensPercent + '%</div></div>' +
+                '<div class="u-borderBottom u-borderDashed u-marginBottomHalf"><strong>Opens:</strong><span class="pull-right"><a href="#opens"><strong>' + numberCommas(opens) + ' (' + opensPercent + '%)</strong></a></span></div>' +
+                '<div id="clicksprogressbar' + divId + '"><div class="progress-label">' + clicksPercent + '%</div></div>' +
+                '<div class="u-borderBottom u-borderDashed u-marginBottomHalf"><strong>Unique Clicks:</strong><span class="pull-right"><a href="#clicks"><strong>' + numberCommas(clicks) + ' (' + clicksPercent + '%)</strong></a></span></div>' +
+                '</div><div class="well">' +
+                '<div class="u-borderBottom u-borderDashed u-marginBottomHalf"><strong>Forwards:</strong><span class="pull-right"><a href="#forwards"><strong>' + numberCommas(forwards) + '</strong></a></span></div>' +
+                '<div class="u-borderBottom u-borderDashed u-marginBottomHalf"><strong>Spam:</strong><span class="pull-right"><strong>' + numberCommas(spam) + '</strong></span></div>' +
+                '<div class="u-borderBottom u-borderDashed u-marginBottomHalf"><strong>Unsubscribes:</strong><span class="pull-right"><a href="#unsubscribes"><strong>' + numberCommas(unsubscribes) + '</strong></a></span></div>' +
+                '</div></div>' +
+                '</div>';
+            $(tbody).append(emailHeader);
+            $(tbody).append(tracking_stats);
+            $(tracking_stats).append(td);
+
+            tr = '<div class="row bg-primary" style="padding: 10px 0px;">' +
+                '<div class="col-xs-1"><strong>Clicks</strong></a></div>' +
+                '<div class="col-xs-1"><strong>Dist</strong></a></div>' +
+                '<div class="col-xs-10"><strong>Link URL</strong></div>' +
+                '</div>';
+            $(tbody).append(tr);
+            let clickCount = 0;
+            $.each(data.click_through_details, function (k, v) {
+                clickCount += v.click_count;
+            });
+
+            /* Calculating the click percentage for each link; if 0, make it 0 instead of trying to divide (NaN) */
+            let clickPercentage = '';
+            $.each(data.click_through_details, function (k, v) {
+                if (clickCount !== 0) {
+                    clickPercentage = percentage(v.click_count, clickCount);
+                }
+                else {
+                    clickPercentage = 0;
+                }
+                link_stats = '<div class="row row-bottom">' +
+                    '<div class="col-xs-1">' + numberCommas(v.click_count) + '</div>' +
+                    '<div class="col-xs-1">' + clickPercentage + '%</div>' +
+                    '<div class="col-xs-10"><a href="' + v.url + '" target="_blank" data-url-id="' + v.url_uid + '">' + v.url + '</a></div>' +
+                    '</div>';
+                $(tbody).append(link_stats);
+            });
+
+            link_stats = '<div class="row totals">' +
+                '<div class="col-xs-1"><strong>' + clickCount + '</strong></div>' +
+                '<div class="col-xs-1"><strong>100%</strong></div>' +
+                '<div class="col-xs-10"><strong>Total Click-throughs</strong></div>' +
+                '</div>';
+            $(tbody).append(link_stats);
+
+            $('#' + modalId + ' #' + divId).append(tbody);
+            //$('#myModalLabel').html(data.subject + '<br><small><strong>Sent</strong> ' + runDate + '</small>');
+            //$('#NewWin').attr('href', data.permalink_url);
+            $('#' + modalId).on('shown.bs.modal', function () {
+                //$(this).find('iframe').attr('src', secureLink);
+                //$(this).find('#myModalLabel').html(data.subject + '<br><small><strong>Sent</strong> ' + runDate + '</small>');
+                //$(this).find('#NewWin').attr('href', data.permalink_url);
+                //alert(data.id);
+            });
+
+            $('#clicksprogressbar' + divId).progressbar({
+                value: Math.round(clicksPercent)
+            });
+            $('#opensprogressbar' + divId).progressbar({
+                value: Math.round(opensPercent)
+            });
+            $('#successprogressbar' + divId).progressbar({
+                value: Math.round(successPercent)
+            });
+            contactsLists(data.sent_to_contact_lists, divId, modalId);
+        }
+
+        function listAppend(data, option) {
+            console.log(data, option);
+            let parent, date, newOption;
+
+            // listTracking = ['clicks', 'opens', 'sends', 'unsubscribes', 'bounces', forwards'];
+            var dataByCat = {
+                clicks: {
+                    dateLabel: 'click_date'
+                },
+                opens: {
+                    dateLabel: 'open_date'
+                }
+            };
+            let exp = dataByCat[option];
+            //console.log('dataByCat:', exp);
+            // if (option.indexOf(listTracking) == 5) {
+            //     newOption = 'spam';
+            //     parent = '#' + option;
+            // }
+            // else {
+            newOption = option.slice(0, -1);
+            parent = '#' + option;
+            $(parent + '> .loading').remove();
+            // }
+            let header = '<div class="row row-bottom text-center" style="font-weight: bold;">' +
+                '<div class="col-sm-3 col-xs-6">Email Address</div>' +
+                '<div class="col-sm-3 col-xs-6 capitalize">' + newOption + ' Date</div>';
+
+            if (option === 'clicks') {
+                header += '<div class="col-sm-6 col-xs-12">Clicked on</div>' +
+                    '</div>';
+            }
+            else if (option === 'unsubscribes') {
+                header += '<div class="col-sm-6 col-xs-12">Reason</div>' +
+                    '</div>';
+            }
+            else {
+                header += '</div>';
+            }
+            $(parent).append(header);
+            var click_details = itemDetails.responseJSON.click_through_details;
+            var linkURL;
+            $.each(data.responseJSON.results, function (k, v) {
+                date = newOption + '_date';
+                console.log(k, 'date', date, v[date], v, itemDetails);
+
+                for (var i = 0; i < click_details.length; i++) {
+                    if (click_details[i].url_uid == v.link_id) {
+                        v.link_url = click_details[i].url;
+                        linkURL = 55 < v.link_url.length ? linkURL = v.link_url.slice(0, 55) + ' ...' : v.link_url;
+                    }
+                }
+                // if (v.link_url.length > 60) {
+                //     linkURL = v.link_url.slice(0, 60) + ' ...';
+                // }
+                // else {
+                //     linkURL = v.link_url;
+                // }
+
+
+                let row = '<div class="row row-bottom">' +
+                    '<div class="col-sm-3 col-xs-6"><a href="#" data-contact-id="' + v.contact_id + '" >' + v.email_address + '</a></div>' +
+                    '<div class="col-sm-3 col-xs-6 text-center">' + prettyDate(v[date]) + '</div>';
+
+                if (option === 'clicks') {
+                    row += '<div class="col-sm-6 col-xs-12" data-link-id="' + v.link_id + '"><a href="' + v.link_url + '" target="_blank" >' + linkURL + '</a></div>' +
+                        '</div>';
+                }
+                else if (option === 'unsubscribes') {
+                    header += '<div class="col-sm-6 col-xs-12">' + v.unsubscribe_reason + '</div>' +
+                        '</div>';
+                }
+                else {
+                    row += '</div>';
+                }
+                $(parent).append(row);
+            });
+        }
+
+        /*  Searches every row for keyword entered.
+            If no keyword was sent to function (a.k.a. undefined),
+            it finds the value from the search_listing field.
+        */
+        function searchRows(thisSearch) {
+            var srch;
+            $(hiddenRows).removeClass('hidden');
+            $(matchedRows).removeClass('match');
+            searchMode = false;
+            if (thisSearch === undefined) {
+                thisSearch = $('#search_listing').val();
+            }
+
+            srch = thisSearch; //.toLowerCase();
+            var thisRow;
+            searchMode = true;
+
+            console.log(srch, 'searchMode: ' + searchMode);
+            hiddenRows = $('#emailLists .email-view').filter(function () {
+                thisRow = $(this).text().toLowerCase();
+                return !$(this).is(':contains("' + srch + '")');
+            }).closest('.row ');
+            $(hiddenRows).addClass('hidden');
+
+            matchedRows = $('#emailLists .email-view').filter(function () {
+                thisRow = $(this).text().toLowerCase();
+                return $(this).is(':contains("' + srch + '")');
+            }).closest('.row ');
+            $(matchedRows).addClass('match');
+        }
+
+        function checkboxCount() {
+            var $checkboxes = $('#list-emails input[type="checkbox"].email-check');
+            checkedCheckboxes = $checkboxes.filter(':checked');
+            countCheckedCheckboxes = checkedCheckboxes.length;
+            //console.log($checkboxes.filter(':checked'), $checkboxes.filter(':checked').length);
+            $('#count-checked-checkboxes').text('(' + countCheckedCheckboxes + ')');
+            if (4 < checkedCheckboxes.length || checkedCheckboxes.length < 2) {
+                $('#compare').addClass('disabled');
+            }
+            else {
+                $('#compare').removeClass('disabled');
+            }
+        }
+
+        /* Prettifies the date and makes local */
+        function prettyDate(date) {
+            return new Date(date).toLocaleString('en-us', dateOptions);
+        }
+
+        /* Event Listeners */
+        $('.next').on('click', function (e) {
+            e.preventDefault();
+            let link = $(this).data('link');
+            console.log('At listener', link, e);
+            //getNext(link);
+            let nextData = {
+                method: '/emailmarketing/campaigns',
+                next: link
+            };
+            console.log('next link: ', link);
+            $('.next').removeAttr('data-link');
+            mainLoad(nextData);
+            //getEmails(nextData, 'list');
+        });
+
+        $('#emailLists').on('click', '#contacts-lists > a', function () {
+            console.log($(this).data('id'));
+            var dataId = $(this).data('id');
+            data = {
+                method: '/lists',
+                id: dataId
+            };
+            getEmails(data, 'contacts-lists');
+        });
+
+        $('#emailLists').on('click', '.email-check', function () {
+            $(this).closest('.row').toggleClass('checked');
+            selected = $(this).closest('.row').attr('data-email-id');
+        });
+
+        $('#emailLists').on('change', '.email-check', function () {
+            checkboxCount();
+        });
+
+        $('#emailLists').on('click', '.email-view', function () {
+            var modalId = 'myModal';
+            console.log($(this).data('id'));
+            var dataId = $(this).data('id'),
+                modalDataId = $('#' + modalId).attr('data-email-id').indexOf(dataId);
+            console.log($('#' + modalId).attr('data-email-id'));
+            if (modalDataId !== 0) {
+                console.log('getDetails: ' + dataId + ' !== modalDataId:' + modalDataId);
+                $('#modalTab > div').html('<span class="loading">Loading...</span>');
+                getDetails(dataId);
+            }
+            //$('#modalTab a:first').tab('show');
+            $('a[href="#main"]').tab('show');
+            $('#' + modalId).modal('show');
+        });
+
+        $('#emailLists').on('click', '#select-all', function () {
+            console.log($('#emailLists .email-check').closest('.row'));
+            if (searchMode === false) {
+                if ($(this).prop('checked') === true) {
+                    $('#emailLists .email-check').prop('checked', true);
+                    $('#emailLists .email-check').closest('.row').addClass('checked');
+                }
+                else {
+                    $('#emailLists .email-check').prop('checked', false);
+                    $('#emailLists .email-check').closest('.row').removeClass('checked');
+                }
+            }
+            else {
+                if ($(this).prop('checked') === true) {
+                    matchedRowsCheck = $('#emailLists .email-check').closest('.row.match');
+                    matchedRowsCheck.addClass('checked');
+                    matchedRowsCheck.find('.email-check').prop('checked', true);
+                }
+                else {
+                    $('#emailLists .email-check').prop('checked', false);
+                    $('#emailLists .email-check').closest('.row.match').removeClass('checked');
+                }
+            }
+            checkboxCount();
+        });
+
+        $('#search_listing').on('keypress', function (e) {
+            thisSearch = $(this).val();
+            var key = e.which || e.keyCode;
+            if (key === 13) { // 13 is enter
+                searchRows(thisSearch);
+            }
+        });
+
+        $('#search-btn').on('click', function () {
+            thisSearch = $('#search_listing').val();
+            console.log(thisSearch);
+            searchRows(thisSearch);
+        });
+
+        $('#cancel-search').on('click', function () {
+            $(hiddenRows).removeClass('hidden');
+            $(matchedRows).removeClass('match');
+            searchMode = false;
+            $('#search_listing').val('');
+        });
+
+        $('#status').on('change', function () {
+            $('#emailLists').html('');
+            emailCount = 1;
+            listNext = 0;
+            console.log($(this).val());
+            var statusNew = $(this).val();
+            data = {
+                method: '/emailmarketing/campaigns',
+                status: statusNew
+            };
+            mainLoad(data, 'list');
+        });
+
+        $('#emailLists').on('click', '.openBtn', function () {
+            console.log($(this).data('id'));
+            var dataId = $(this).data('id');
+            data = {
+                method: '/lists',
+                id: dataId
+            };
+            mainLoad(data, 'contacts-lists');
+        });
+
+        $('#compare').on('click', function () {
+            console.log($('.row.checked'));
+            let compared = [],
+                compData,
+                compHash,
+                compareList = $('#modalCompare #modalCompareList li');
+            $.each(checkedCheckboxes, function (k, v) {
+                let emailId = $(v).data('email-check');
+                compared.push(emailId);
+            });
+
+            let comparedLength = compared.length;
+            //console.log(compared);
+            //$('#modalCompareList li').addClass("hidden");
+            for (let i = 0; i < comparedLength; i++) {
+                compData = fetchData({
+                    method: '/emailmarketing/campaigns',
+                    id: compared[i]
+                });
+                compData.then(function (response) {
+                    mainDetails(response, i, 'modalCompare');
+                });
+            }
+            compData.done(function () {
+                $('#modalCompare').on('show.bs.modal', function (e) {
+
+                    $.each(compareList, function (k, v) {
+                        console.log(comparedLength);
+                        if (k < comparedLength) {
+                            console.log(k, v, $(this));
+                            $(v).removeClass('hidden');
+                        }
+                        else {
+                            $(v).addClass('hidden');
+                        }
+                    });
+                });
+                $('#modalCompare').modal('show');
+            });
+            compHash = '#id=' + compared.join(',');
+            console.log(compHash);
+            $(this).attr('href', compHash);
+        });
+        $('#modalCompare').on('hide.bs.modal', function (e) {
+            $('#modalCompareTab > div').html('<span class="loading">Loading...</span>');
+            $('#modalCompareList li').addClass('hidden');
+        });
+
+        /* Tabs */
+        $('#modalTab').on('click', 'a[href="#clicks"]', function (e) {
+            e.preventDefault();
+            console.log('clicked');
+            $('a[href="#clicks"]').tab('show');
+        });
+
+        $('#modalTab').on('click', 'a[href="#opens"]', function (e) {
+            e.preventDefault();
+            $('a[href="#opens"]').tab('show');
+        });
+
+        $('#modalTab').on('click', 'a[href="#sends"]', function (e) {
+            e.preventDefault();
+            $('a[href="#sends"]').tab('show');
+        });
+
+        $('#modalTab').on('click', 'a[href="#bounces"]', function (e) {
+            e.preventDefault();
+            $('a[href="#bounces"]').tab('show');
+        });
+
+        $('#modalTab').on('click', 'a[href="#unsubscribes"]', function (e) {
+            e.preventDefault();
+            $('a[href="#unsubscribes"]').tab('show');
+        });
+
+        $('#modalTab').on('click', 'a[href="#forwards"]', function (e) {
+            e.preventDefault();
+            $('a[href="#forwards"]').tab('show');
+        });
+
+        /* Math/Calculation/Number formatting functions */
+        function subtract(arr) {
+            if (Object.prototype.toString.call(arr) === '[object Array]') {
+                var total = arr[0];
+                if (typeof (total) !== 'number') {
+                    return false;
+                }
+                for (var i = 1, length = arr.length; i < length; i++) {
+                    if (typeof (arr[i]) === 'number') {
+                        total -= arr[i];
+                    }
+                    else
+                        return false;
+                }
+                return total;
+            }
+            else
+                return false;
+        }
+
+        function percentage(num1, num2) {
+            return ((num1 / num2) * 100).toFixed(1);
+        }
+
+        function numberCommas(x) {
+            var parts = x.toString().split(".");
+            parts[0] = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+            return parts.join(".");
+        }
+        data = {
+            method: '/emailmarketing/campaigns',
+            status: 'SENT'
+        };
+        mainLoad(data);
+        $('[data-toggle="tooltip"]').tooltip();
+    </script>
+
+</body>
+
+</html>
