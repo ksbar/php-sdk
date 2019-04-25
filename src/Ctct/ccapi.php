@@ -1,9 +1,10 @@
 <?php
 global $api_key, $base, $token, $defUID;
 
-$api_key = 'zrp3udng4mbrzb97smnq2cjh';
+// https://constantcontact.mashery.com/io-docs and sign in
+$api_key = '#########'; // fill in your key
 $base = "https://api.constantcontact.com/v2";
 $uniqueId = uniqid();
-$token = '3c2bcf37-290a-4893-aaf7-ba2c4478efd9';
+$token = '########'; // fill in your token
 $defUID = '/emailmarketing/campaigns';  // default query
 ?>
